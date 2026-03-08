@@ -57,7 +57,7 @@ def check_alerts(send_notification: bool = False) -> List[str]:
     logger.info(f"Checking alerts for {len(watchlist)} assets (parallel processing)")
     
     # Use ThreadPoolExecutor for parallel price fetching
-    with ThreadPoolExecutor(max_workers=min(len(watchlist), 10)) as executor:
+    with ThreadPoolExecutor(max_workers=min(len(watchlist), MAX_WORKERS)) as executor:
         futures = {
             executor.submit(_check_single_alert, symbol, asset_type, purchase_price, threshold): symbol
             for symbol, asset_type, purchase_price, threshold in watchlist
@@ -131,7 +131,7 @@ def generate_daily_report() -> List[Dict[str, Any]]:
     logger.info(f"Generating daily report for {len(watchlist)} assets (parallel processing)")
     
     # Use ThreadPoolExecutor for parallel price fetching
-    with ThreadPoolExecutor(max_workers=min(len(watchlist), 10)) as executor:
+    with ThreadPoolExecutor(max_workers=min(len(watchlist), MAX_WORKERS)) as executor:
         futures = {
             executor.submit(_generate_single_report, symbol, asset_type, purchase_price, threshold, save_history=True): symbol
             for symbol, asset_type, purchase_price, threshold in watchlist

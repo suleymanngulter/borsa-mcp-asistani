@@ -15,27 +15,30 @@ from database import BorsaDB
 from engine import check_alerts, generate_daily_report
 from tracker import get_stock_price, get_fund_price
 from export import export_portfolio_to_json, export_price_history_to_json
+from config import (
+    API_VERSION, CORS_ORIGINS, LOG_LEVEL, LOG_FORMAT, LOG_DATE_FORMAT
+)
 
 load_dotenv()
 
 # Logging yapılandırması
 logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    datefmt='%Y-%m-%d %H:%M:%S'
+    level=getattr(logging, LOG_LEVEL, logging.INFO),
+    format=LOG_FORMAT,
+    datefmt=LOG_DATE_FORMAT
 )
 logger = logging.getLogger(__name__)
 
 app = FastAPI(
     title="Borsa & Fon Asistanı API",
     description="Borsa İstanbul ve TEFAS fon takip API'si",
-    version="1.0.0"
+    version=API_VERSION
 )
 
 # CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Production'da spesifik domain'ler kullanın
+    allow_origins=CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -48,7 +51,7 @@ class AddAssetRequest(BaseModel):
     symbol: str
     asset_type: str
     price: float
-    threshold: float = 5.0
+    threshold: float = DEFAULT_THRESHOLD
 
 class UpdateThresholdRequest(BaseModel):
     new_threshold: float
@@ -65,7 +68,7 @@ async def root():
     """API ana sayfası"""
     return {
         "message": "Borsa & Fon Asistanı API",
-        "version": "1.0.0",
+        "version": API_VERSION,
         "endpoints": {
             "watchlist": "/api/watchlist",
             "portfolio": "/api/portfolio",
@@ -101,12 +104,12 @@ async def get_watchlist():
 async def add_to_watchlist(request: AddAssetRequest):
     """Watchlist'e varlık ekler"""
     try:
-        if request.asset_type not in ['hisse', 'fon']:
-            raise HTTPException(status_code=400, detail="asset_type must be 'hisse' or 'fon'")
+        if request.asset_type not in VALID_ASSET_TYPES:
+            raise HTTPException(status_code=400, detail=f"asset_type must be one of {VALID_ASSET_TYPES}")
         if request.price <= 0:
             raise HTTPException(status_code=400, detail="price must be positive")
-        if request.threshold < 0:
-            raise HTTPException(status_code=400, detail="threshold must be non-negative")
+        if request.threshold < MIN_THRESHOLD:
+            raise HTTPException(status_code=400, detail=f"threshold must be >= {MIN_THRESHOLD}")
         
         db.add_asset(request.symbol, request.asset_type, request.price, request.threshold)
         logger.info(f"Added {request.symbol} to watchlist")
@@ -209,7 +212,7 @@ async def get_asset_details(symbol: str):
 async def get_price_history(symbol: str, days: int = 30):
     """Fiyat geçmişini döndürür"""
     try:
-        days = min(max(1, days), 365)
+        days = min(max(1, days), MAX_PRICE_HISTORY_DAYS)
         history = db.get_price_history(symbol, days)
         
         if not history:
@@ -300,6 +303,6 @@ async def export_portfolio(request: ExportRequest):
 
 if __name__ == "__main__":
     import uvicorn
-    port = int(os.getenv("API_PORT", "8000"))
-    logger.info(f"Starting API server on http://localhost:{port}")
-    uvicorn.run(app, host="0.0.0.0", port=port)
+    from config import API_PORT, API_HOST
+    logger.info(f"Starting API server on http://{API_HOST}:{API_PORT}")
+    uvicorn.run(app, host=API_HOST, port=API_PORT)

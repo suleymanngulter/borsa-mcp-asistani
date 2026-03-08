@@ -7,6 +7,7 @@ import logging
 from datetime import datetime
 from typing import List, Dict, Any
 from pathlib import Path
+from config import EXPORT_DATE_FORMAT
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +24,7 @@ def export_portfolio_to_csv(report_data: List[Dict[str, Any]], filename: str = N
         str: Export edilen dosya yolu
     """
     if filename is None:
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        timestamp = datetime.now().strftime(EXPORT_DATE_FORMAT)
         filename = f"portfolio_report_{timestamp}.csv"
     
     filepath = Path(filename)
@@ -63,7 +64,7 @@ def export_portfolio_to_json(report_data: List[Dict[str, Any]], filename: str = 
         str: Export edilen dosya yolu
     """
     if filename is None:
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        timestamp = datetime.now().strftime(EXPORT_DATE_FORMAT)
         filename = f"portfolio_report_{timestamp}.json"
     
     filepath = Path(filename)
@@ -98,7 +99,7 @@ def export_price_history_to_csv(history_data: List[Dict[str, Any]], symbol: str,
         str: Export edilen dosya yolu
     """
     if filename is None:
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        timestamp = datetime.now().strftime(EXPORT_DATE_FORMAT)
         filename = f"price_history_{symbol}_{timestamp}.csv"
     
     filepath = Path(filename)
@@ -136,7 +137,7 @@ def export_price_history_to_json(history_data: List[Dict[str, Any]], symbol: str
         str: Export edilen dosya yolu
     """
     if filename is None:
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        timestamp = datetime.now().strftime(EXPORT_DATE_FORMAT)
         filename = f"price_history_{symbol}_{timestamp}.json"
     
     filepath = Path(filename)

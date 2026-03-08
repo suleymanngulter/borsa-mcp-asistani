@@ -313,15 +313,23 @@ pytest --cov=src
 
 ## 📝 Lisans
 
-Bu proje eğitim ve pratik amaçlı geliştirilmiştir.
+Bu proje MIT lisansı altında lisanslanmıştır. Detaylar için [LICENSE](LICENSE) dosyasına bakın.
+
+## 📋 Changelog
+
+Proje değişiklik geçmişi için [CHANGELOG.md](CHANGELOG.md) dosyasına bakın.
 
 ## 🤝 Katkıda Bulunma
 
 Öneriler ve iyileştirmeler için issue açabilir veya pull request gönderebilirsiniz.
 
-## 📚 Detaylı Kullanım Kılavuzu
+## 📚 Dokümantasyon
 
-Kapsamlı kullanım örnekleri ve senaryolar için [KULLANIM_KILAVUZU.md](KULLANIM_KILAVUZU.md) dosyasına bakın.
+Detaylı dokümantasyon için [docs/](docs/) klasörüne bakın:
+
+- **[Kullanım Kılavuzu](docs/KULLANIM_KILAVUZU.md)** - Adım adım kullanım rehberi
+- **[API Dokümantasyonu](docs/API.md)** - HTTP REST API referansı
+- **[Mimari Dokümantasyon](docs/ARCHITECTURE.md)** - Sistem mimarisi ve tasarım kararları
 
 ## 📧 İletişim
 

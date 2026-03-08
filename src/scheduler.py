@@ -7,6 +7,10 @@ import logging
 from datetime import datetime
 from engine import check_alerts, generate_daily_report
 from notifications import EmailNotifier, TelegramNotifier, send_notifications
+from config import (
+    DEFAULT_ALERT_INTERVAL_MINUTES, DEFAULT_DAILY_REPORT_TIME,
+    ENABLE_ALERTS, ENABLE_DAILY_REPORT, LOG_LEVEL, LOG_FORMAT, LOG_DATE_FORMAT
+)
 
 logger = logging.getLogger(__name__)
 
@@ -81,27 +85,20 @@ def start_scheduler(
 
 
 if __name__ == "__main__":
-    import os
     from dotenv import load_dotenv
     
     load_dotenv()
     
     # Logging yapılandırması
     logging.basicConfig(
-        level=logging.INFO,
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-        datefmt='%Y-%m-%d %H:%M:%S'
+        level=getattr(logging, LOG_LEVEL, logging.INFO),
+        format=LOG_FORMAT,
+        datefmt=LOG_DATE_FORMAT
     )
     
-    # Environment değişkenlerinden ayarları al
-    alert_interval = int(os.getenv("ALERT_INTERVAL_MINUTES", "60"))
-    daily_report_time = os.getenv("DAILY_REPORT_TIME", "09:00")
-    enable_alerts = os.getenv("ENABLE_ALERTS", "true").lower() == "true"
-    enable_daily_report = os.getenv("ENABLE_DAILY_REPORT", "true").lower() == "true"
-    
     start_scheduler(
-        alert_interval_minutes=alert_interval,
-        daily_report_time=daily_report_time,
-        enable_alerts=enable_alerts,
-        enable_daily_report=enable_daily_report
+        alert_interval_minutes=DEFAULT_ALERT_INTERVAL_MINUTES,
+        daily_report_time=DEFAULT_DAILY_REPORT_TIME,
+        enable_alerts=ENABLE_ALERTS,
+        enable_daily_report=ENABLE_DAILY_REPORT
     )

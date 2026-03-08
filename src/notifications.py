@@ -1,25 +1,28 @@
-import os
 import smtplib
 import logging
+import requests
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from typing import List, Optional
-from dotenv import load_dotenv
+from config import (
+    SMTP_SERVER, SMTP_PORT, SMTP_USERNAME, SMTP_PASSWORD,
+    EMAIL_FROM, EMAIL_TO, TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID,
+    TELEGRAM_API_URL
+)
 
 logger = logging.getLogger(__name__)
-load_dotenv()
 
 
 class EmailNotifier:
     """E-posta bildirim gönderici."""
     
     def __init__(self):
-        self.smtp_server = os.getenv("SMTP_SERVER", "smtp.gmail.com")
-        self.smtp_port = int(os.getenv("SMTP_PORT", "587"))
-        self.smtp_username = os.getenv("SMTP_USERNAME")
-        self.smtp_password = os.getenv("SMTP_PASSWORD")
-        self.from_email = os.getenv("EMAIL_FROM", self.smtp_username)
-        self.to_email = os.getenv("EMAIL_TO", self.smtp_username)
+        self.smtp_server = SMTP_SERVER
+        self.smtp_port = SMTP_PORT
+        self.smtp_username = SMTP_USERNAME
+        self.smtp_password = SMTP_PASSWORD
+        self.from_email = EMAIL_FROM
+        self.to_email = EMAIL_TO
         self.enabled = bool(self.smtp_username and self.smtp_password)
     
     def send_alert(self, subject: str, message: str, alerts: List[str]) -> bool:
@@ -113,10 +116,10 @@ class TelegramNotifier:
     """Telegram bildirim gönderici."""
     
     def __init__(self):
-        self.bot_token = os.getenv("TELEGRAM_BOT_TOKEN")
-        self.chat_id = os.getenv("TELEGRAM_CHAT_ID")
+        self.bot_token = TELEGRAM_BOT_TOKEN
+        self.chat_id = TELEGRAM_CHAT_ID
         self.enabled = bool(self.bot_token and self.chat_id)
-        self.api_url = f"https://api.telegram.org/bot{self.bot_token}/sendMessage" if self.bot_token else None
+        self.api_url = TELEGRAM_API_URL
     
     def send_message(self, text: str) -> bool:
         """
@@ -133,7 +136,6 @@ class TelegramNotifier:
             return False
         
         try:
-            import requests
             payload = {
                 "chat_id": self.chat_id,
                 "text": text,

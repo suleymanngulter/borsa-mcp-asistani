@@ -1,10 +1,17 @@
 import sqlite3
 from datetime import datetime, date
 from typing import List, Tuple, Optional
+from config import DEFAULT_DB_PATH
 
 class BorsaDB:
-    def __init__(self, db_path="borsa_asistani.db"):
-        self.db_path = db_path
+    def __init__(self, db_path: str = None):
+        """
+        BorsaDB sınıfı başlatıcı.
+        
+        Args:
+            db_path: Veritabanı dosya yolu. None ise varsayılan yol kullanılır.
+        """
+        self.db_path = db_path or DEFAULT_DB_PATH
         self._init_db()
 
     def _init_db(self):

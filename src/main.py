@@ -14,23 +14,26 @@ from export import (
     export_price_history_to_csv, export_price_history_to_json
 )
 from graph import plot_price_history, plot_portfolio_comparison
+from config import (
+    LOG_LEVEL, LOG_FORMAT, LOG_DATE_FORMAT,
+    GEMINI_API_KEY, GEMINI_MODEL, VALID_ASSET_TYPES
+)
+
+load_dotenv()
 
 # Logging yapılandırması
-log_level = os.getenv("LOG_LEVEL", "INFO").upper()
 logging.basicConfig(
-    level=getattr(logging, log_level, logging.INFO),
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    datefmt='%Y-%m-%d %H:%M:%S'
+    level=getattr(logging, LOG_LEVEL, logging.INFO),
+    format=LOG_FORMAT,
+    datefmt=LOG_DATE_FORMAT
 )
 logger = logging.getLogger(__name__)
 
-load_dotenv()
-GENAI_API_KEY = os.getenv("GEMINI_API_KEY")
-
-if GENAI_API_KEY:
+# Gemini AI yapılandırması
+if GEMINI_API_KEY:
     try:
-        genai.configure(api_key=GENAI_API_KEY)
-        model = genai.GenerativeModel('gemini-2.0-flash')
+        genai.configure(api_key=GEMINI_API_KEY)
+        model = genai.GenerativeModel(GEMINI_MODEL)
         logger.info("Gemini AI model initialized successfully")
     except Exception as e:
         logger.error(f"Failed to initialize Gemini AI: {e}")
@@ -44,7 +47,7 @@ db = BorsaDB()
 logger.info("MCP server 'Borsa-Fon Asistani' initialized")
 
 @mcp.tool()
-def add_to_watchlist(symbol: str, asset_type: str, price: float, threshold: float = 5.0) -> str:
+def add_to_watchlist(symbol: str, asset_type: str, price: float, threshold: float = None) -> str:
     """
     Adds a new stock/fund to the watchlist.
     
@@ -52,15 +55,18 @@ def add_to_watchlist(symbol: str, asset_type: str, price: float, threshold: floa
         symbol: Ticker symbol (e.g., THYAO, GMR)
         asset_type: 'hisse' or 'fon'
         price: Purchase/Reference price
-        threshold: Alert threshold percentage (default 5.0%)
+        threshold: Alert threshold percentage. If None, uses default from config.
     """
     try:
-        if asset_type not in ['hisse', 'fon']:
-            raise ValueError(f"Invalid asset_type: {asset_type}. Must be 'hisse' or 'fon'")
+        if threshold is None:
+            threshold = DEFAULT_THRESHOLD
+        
+        if asset_type not in VALID_ASSET_TYPES:
+            raise ValueError(f"Invalid asset_type: {asset_type}. Must be one of {VALID_ASSET_TYPES}")
         if price <= 0:
             raise ValueError(f"Price must be positive, got: {price}")
-        if threshold < 0:
-            raise ValueError(f"Threshold must be non-negative, got: {threshold}")
+        if threshold < MIN_THRESHOLD:
+            raise ValueError(f"Threshold must be >= {MIN_THRESHOLD}, got: {threshold}")
         
         db.add_asset(symbol, asset_type, price, threshold)
         logger.info(f"Added {symbol} ({asset_type}) to watchlist with price {price} and threshold {threshold}%")
@@ -212,8 +218,8 @@ def update_threshold(symbol: str, new_threshold: float) -> str:
         new_threshold: The new threshold percentage (must be >= 0).
     """
     try:
-        if new_threshold < 0:
-            raise ValueError(f"Threshold must be non-negative, got: {new_threshold}")
+        if new_threshold < MIN_THRESHOLD:
+            raise ValueError(f"Threshold must be >= {MIN_THRESHOLD}, got: {new_threshold}")
         
         asset = db.get_asset(symbol)
         if not asset:
@@ -296,7 +302,7 @@ def get_price_history(symbol: str, days: int = 30) -> dict:
     """
     try:
         # Limit days to reasonable range
-        days = min(max(1, days), 365)
+        days = min(max(1, days), MAX_PRICE_HISTORY_DAYS)
         
         history = db.get_price_history(symbol, days)
         
